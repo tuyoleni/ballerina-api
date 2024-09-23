@@ -73,5 +73,5 @@ The project is divided into two main parts:
 ### Steps:
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repository-url.git
+   https://github.com/tuyoleni/ballerina-api.git
    cd your-repository
