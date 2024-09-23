@@ -39,4 +39,26 @@ service /api on new http:Listener(3000) {
         return programmeList;
     }
 
+    //Resouce Function to Retrieve all programmes due for review
+    resource function get review_due() returns Reviews[]|error {
+        stream<Reviews, sql:Error?> reviewsStream = db->query(`
+            SELECT *
+            FROM Reviews r
+            WHERE r.review_due_date <= CURRENT_DATE
+        `);
+
+        Reviews[] reviewList = [];
+        check from Reviews reviews in reviewsStream
+            do {
+                reviewList.push(reviews);
+            };
+
+        // If no results are found, return an error
+        // if reviewList.length() == 0 {
+        //     return error("No Programme is Due");
+        // }
+
+        return reviewList;
+    }
+
 }
