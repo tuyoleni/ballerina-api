@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package service_interface;
+
+service OnlineShoppingService {
+    // Admin operations
+    rpc addProduct (Product) returns (ProductResponse);
+    rpc updateProduct (ProductUpdate) returns (ProductResponse);
+    rpc removeProduct (ProductId) returns (ProductList);
+    rpc createUsers (stream User) returns (UserResponse);
+
+    // Customer operations
+    rpc listAvailableProducts (Empty) returns (ProductList);
+    rpc searchProduct (ProductId) returns (ProductResponse);
+    rpc addToCart (CartRequest) returns (CartResponse);
+    rpc placeOrder (OrderRequest) returns (OrderResponse);
+}
+
+message Product {
+    string name = 1;
+    string description = 2;
+    float price = 3;
+    int32 stock_quantity = 4;
+    string sku = 5;
+    string status = 6;
+}
+
+message ProductUpdate {
+    string sku = 1;
+    Product product = 2;
+}
+
+message ProductId {
+    string sku = 1;
+}
+
+message ProductResponse {
+    string message = 1;
+    Product product = 2;
+}
+
+message ProductList {
+    repeated Product products = 1;
+}
+
+message User {
+    string user_id = 1;
+    string name = 2;
+    string role = 3; // admin or customer
+}
+
+message UserResponse {
+    string message = 1;
+}
+
+message CartRequest {
+    string user_id = 1;
+    string sku = 2;
+}
+
+message CartResponse {
+    string message = 1;
+}
+
+message OrderRequest {
+    string user_id = 1;
+}
+
+message OrderResponse {
+    string message = 1;
+    repeated Product products = 2;
+}
+
+message Empty {}
