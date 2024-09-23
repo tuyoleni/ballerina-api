@@ -84,3 +84,41 @@ service /api on new http:Listener(3000) {
     }
 
 }
+
+    // Resource function to update an existing programme's information by programme code
+    resource function put update_programme/[string programme_code](Programmes programme) returns Programmes[]|error {
+
+        boolean updated = false;
+
+        if programme.programme_name is string {
+            _ = check db->execute(`UPDATE Programmes SET programme_name = ${programme.programme_name} WHERE programme_code = ${programme_code}`);
+            updated = true;
+        }
+        if programme.NQF_level is string {
+            _ = check db->execute(`UPDATE Programmes SET NQF_level = ${programme.NQF_level} WHERE programme_code = ${programme_code}`);
+            updated = true;
+        }
+        if programme.faculty is string {
+            _ = check db->execute(`UPDATE Programmes SET faculty = ${programme.faculty} WHERE programme_code = ${programme_code}`);
+            updated = true;
+        }
+        if programme.department is string {
+            _ = check db->execute(`UPDATE Programmes SET department = ${programme.department} WHERE programme_code = ${programme_code}`);
+            updated = true;
+        }
+
+        if !updated {
+            return error("No fields provided for update");
+        }
+
+        stream<Programmes, sql:Error?> programmeStream = db->query(`SELECT * FROM Programmes WHERE programme_code = ${programme_code}`);
+
+        // Collect results from the stream into a list
+        Programmes[] programmeList = [];
+        check from Programmes programmes in programmeStream
+            do {
+                programmeList.push(programmes);
+            };
+
+        return programmeList;
+    }
