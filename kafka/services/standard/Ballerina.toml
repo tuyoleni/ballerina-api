@@ -1,6 +1,6 @@
 [package]
 org = "tuyoleni"
-name = "server"
+name = "standard"
 version = "0.1.0"
 distribution = "2201.10.1"
 
