@@ -1,5 +1,6 @@
 import ballerina/io;
 import ballerinax/kafka;
+import ballerina/uuid;
 
 
 
@@ -18,7 +19,7 @@ public function main() returns error? {
                 check submitDeliveryRequest();
             }
             2 => {
-                trackShipment();
+                check trackShipment();
             }
             3 => {
                 io:println("Thank you for using the Logistics System. Goodbye!");
@@ -54,14 +55,21 @@ function submitDeliveryRequest() returns error? {
 
     string pickupLocation = io:readln("Enter pickup location: ");
     string deliveryLocation = io:readln("Enter delivery location: ");
+    string preferredPickupTime = io:readln("Enter preferred pickup time (YYYY-MM-DD HH:MM): ");
+    string preferredDeliveryTime = io:readln("Enter preferred delivery time (YYYY-MM-DD HH:MM): ");
     string firstName = io:readln("Enter first name: ");
     string lastName = io:readln("Enter last name: ");
     string contactNumber = io:readln("Enter contact number: ");
 
+    string requestId = uuid:createType1AsString();
+
     json payload = {
+        "requestId": requestId,
         "shipmentType": shipmentType,
         "pickupLocation": pickupLocation,
         "deliveryLocation": deliveryLocation,
+        "preferredPickupTime": preferredPickupTime,
+        "preferredDeliveryTime": preferredDeliveryTime,
         "firstName": firstName,
         "lastName": lastName,
         "contactNumber": contactNumber
@@ -70,14 +78,24 @@ function submitDeliveryRequest() returns error? {
     check sendToKafka(payload);
 
     io:println("Delivery request submitted successfully!");
+    io:println("Your tracking number is: " + requestId);
+    io:println("You can use this tracking number to check the status of your shipment.");
 }
 
-function trackShipment() {
+function trackShipment() returns error? {
     string trackingNumber = io:readln("Enter tracking number: ");
-    io:println("Tracking information for " + trackingNumber + " will be displayed here.");
+    
+    json trackingRequest = {
+        "requestId": trackingNumber
+    };
+
+    check sendToKafka(trackingRequest, "tracking-requests");
+
+    io:println("Tracking information for " + trackingNumber + " has been requested.");
+    io:println("Please check back later for updates on your shipment.");
 }
 
-function sendToKafka(json payload) returns error? {
+function sendToKafka(json payload, string topic = "delivery-requests") returns error? {
     kafka:ProducerConfiguration producerConfigs = {
         clientId: "logistics-client",
         acks: "all",
@@ -89,7 +107,7 @@ function sendToKafka(json payload) returns error? {
     byte[] serializedMsg = payload.toJsonString().toBytes();
 
     kafka:BytesProducerRecord producerRecord = {
-        topic: "delivery-requests",
+        topic: topic,
         value: serializedMsg
     };
     check kafkaProducer->send(producerRecord);
