@@ -3,6 +3,14 @@ import ballerina/lang.value;
 import ballerinax/kafka;
 import ballerinax/mongodb;
 
+const string RESET = "\u{001B}[0m";
+const string RED = "\u{001B}[31m";
+const string GREEN = "\u{001B}[32m";
+const string YELLOW = "\u{001B}[33m";
+const string BLUE = "\u{001B}[34m";
+const string CYAN = "\u{001B}[36m";
+
+
 mongodb:Client mongoClient = check new ({
     connection: {
         serverAddress: {
@@ -27,7 +35,10 @@ public function main() returns error? {
 
     kafka:Consumer kafkaConsumer = check new (kafka:DEFAULT_URL, consumerConfigs);
 
-    io:println("Logistics service started. Waiting for requests...");
+    io:println(CYAN + "\n+===============================================+\n" +
+                     "|        Logistics service started.             |\n" +
+                     "|      Waiting for requests...                  |\n" +
+                     "+===============================================+" + RESET);
 
     while (true) {
         kafka:BytesConsumerRecord[] records = check kafkaConsumer->poll(1);
@@ -39,8 +50,8 @@ public function main() returns error? {
 
                 string topic = rec.offset.partition.topic;
 
-                io:println("Received record from topic: ", topic);
-                io:println("Record data: ", valueJson);
+                io:println(GREEN + "\n+------------------ Request Received ------------------+\n" +
+                                  "| Topic: " + topic + RESET);
 
                 match topic {
                     "delivery-requests" => {
@@ -53,18 +64,23 @@ public function main() returns error? {
                         check processDeliveryConfirmation(valueString);
                     }
                     _ => {
-                        io:println("Unknown topic: ", topic);
+                        io:println(RED + "\n+------------------- Unknown Topic --------------------+\n" +
+                                           "| Unknown topic: " + topic + RESET);
                     }
                 }
             } on fail error e {
                 if e is DeliveryRequestError {
-                    io:println("Error processing delivery request: ", e.message());
+                    io:println(RED + "\n+------------------- Error --------------------+\n" +
+                                       "| Error processing delivery request: " + e.message() + RESET);
                 } else if e is TrackingRequestError {
-                    io:println("Error processing tracking request: ", e.message());
+                    io:println(RED + "\n+------------------- Error --------------------+\n" +
+                                       "| Error processing tracking request: " + e.message() + RESET);
                 } else if e is DeliveryConfirmationError {
-                    io:println("Error processing delivery confirmation: ", e.message());
+                    io:println(RED + "\n+------------------- Error --------------------+\n" +
+                                       "| Error processing delivery confirmation: " + e.message() + RESET);
                 } else {
-                    io:println("Unexpected error: ", e.message());
+                    io:println(RED + "\n+------------------- Unexpected Error --------------------+\n" +
+                                       "| Error: " + e.message() + RESET);
                 }
             }
         }
@@ -74,7 +90,7 @@ public function main() returns error? {
 function processDeliveryRequest(string requestStr) returns error? {
     json request = check value:fromJsonString(requestStr);
 
-    io:println("\n--- Processing Delivery Request ---");
+    io:println(BLUE + "\n+------------------ Processing Delivery Request ------------------+" + RESET);
     io:println("Request ID: ", request.requestId);
     io:println("Shipment Type: ", request.shipmentType);
     io:println("Pickup Location: ", request.pickupLocation);
@@ -87,36 +103,36 @@ function processDeliveryRequest(string requestStr) returns error? {
     mongodb:Database logistics = check mongoClient->getDatabase("logistics");
     mongodb:Collection requests = check logistics->getCollection("requests");
     _ = check requests->insertOne(<map<json>>request);
-    io:println("Request stored in database.");
+    io:println(GREEN + "Request stored in database." + RESET);
 
     match request.shipmentType {
         "standard" => {
             check forwardToService("standard-delivery", request);
-            io:println("Request forwarded to standard delivery service.");
+            io:println(GREEN + "Request forwarded to standard delivery service." + RESET);
         }
         "express" => {
             check forwardToService("express-delivery", request);
-            io:println("Request forwarded to express delivery service.");
+            io:println(GREEN + "Request forwarded to express delivery service." + RESET);
         }
         "international" => {
             check forwardToService("international-delivery", request);
-            io:println("Request forwarded to international delivery service.");
+            io:println(GREEN + "Request forwarded to international delivery service." + RESET);
         }
         _ => {
-            io:println("Error: Invalid shipment type");
+            io:println(RED + "Error: Invalid shipment type" + RESET);
             return error("Invalid shipment type");
         }
     }
 
-    io:println("Delivery request processed successfully.");
-    io:println("-----------------------------------\n");
+    io:println(GREEN + "Delivery request processed successfully." + RESET);
+    io:println(BLUE + "+-----------------------------------------------------------------+\n" + RESET);
 }
 
 function processTrackingRequest(string requestStr) returns error? {
     json request = check value:fromJsonString(requestStr);
     string requestId = check request.requestId;
 
-    io:println("\n--- Processing Tracking Request ---");
+    io:println(BLUE + "\n+------------------ Processing Tracking Request ------------------+" + RESET);
     io:println("Tracking Request ID: ", requestId);
 
     mongodb:Database logistics = check mongoClient->getDatabase("logistics");
@@ -124,20 +140,20 @@ function processTrackingRequest(string requestStr) returns error? {
     record {|anydata...;|}? result = check requests->findOne({"requestId": requestId});
 
     if result is record {|anydata...;|} {
-        io:println("Tracking information found:");
+        io:println(GREEN + "Tracking information found:" + RESET);
         io:println(result.toJsonString());
     } else {
-        io:println("No tracking information found for request " + requestId);
+        io:println(RED + "No tracking information found for request " + requestId + RESET);
     }
 
-    io:println("-----------------------------------\n");
+    io:println(BLUE + "+-----------------------------------------------------------------+\n" + RESET);
 }
 
 function processDeliveryConfirmation(string confirmationStr) returns error? {
     json confirmation = check value:fromJsonString(confirmationStr);
     string requestId = check confirmation.requestId;
 
-    io:println("\n--- Processing Delivery Confirmation ---");
+    io:println(BLUE + "\n+-------------- Processing Delivery Confirmation --------------+" + RESET);
     io:println("Request ID: ", requestId);
     io:println("Status: ", confirmation.status);
     io:println("Pickup Time: ", confirmation.pickupTime);
@@ -155,8 +171,8 @@ function processDeliveryConfirmation(string confirmationStr) returns error? {
     };
     _ = check requests->updateOne({"requestId": requestId}, update);
 
-    io:println("Delivery confirmation processed and database updated.");
-    io:println("-----------------------------------\n");
+    io:println(GREEN + "Delivery confirmation processed and database updated." + RESET);
+    io:println(BLUE + "+-----------------------------------------------------------------+\n" + RESET);
 }
 
 function forwardToService(string topic, json request) returns error? {
@@ -193,11 +209,9 @@ function updateDeliveryStatus(string requestId, string status) returns error? {
         }
     };
     _ = check requests->updateOne({"requestId": requestId}, update);
-    io:println("Delivery status updated for request ", requestId, ": ", status);
+    io:println(GREEN + "Delivery status updated for request " + requestId + ": " + status + RESET);
 }
 
 type DeliveryRequestError distinct error<record {|string message;|}>;
-
 type TrackingRequestError distinct error<record {|string message;|}>;
-
 type DeliveryConfirmationError distinct error<record {|string message;|}>;

@@ -46,7 +46,7 @@ function sendConfirmation(json request) returns error? {
         "requestId": check request.requestId,
         "status": "confirmed",
         "pickupTime": "2023-05-10T10:00:00Z",
-        "estimatedDeliveryTime": "2023-05-11T14:00:00Z"  // Faster delivery for express
+        "estimatedDeliveryTime": "2023-05-11T14:00:00Z"
     };
     
     byte[] serializedMsg = confirmation.toJsonString().toBytes();

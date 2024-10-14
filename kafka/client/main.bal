@@ -2,18 +2,39 @@ import ballerina/io;
 import ballerinax/kafka;
 import ballerina/uuid;
 
+// ANSI color codes for better UI presentation
+const string RESET = "\u{001B}[0m}";
+const string RED = "\u{001B}[31m}";
+const string GREEN = "\u{001B}[32m}";
+const string YELLOW = "\u{001B}[33m}";
+const string BLUE = "\u{001B}[34m}";
+const string CYAN = "\u{001B}[36m}";
 
+// Function to print the header with better borders and alignment
+function printHeader() {
+    io:println(CYAN + "\n+===============================================+\n" +
+                     "|                                               |\n" +
+                     "|              ✈ Logistics System CLI ✈          |\n" +
+                     "|                                               |\n" +
+                     "+===============================================+" + RESET);
+}
+
+// Function to print a more appealing menu with symbols
+function printMenu() {
+    io:println(GREEN + "\n+------------------ Main Menu ------------------+\n" +
+                      "| 1️⃣  → Submit a new delivery request             |\n" +
+                      "| 2️⃣  → Track a shipment                          |\n" +
+                      "| 3️⃣  → Exit                                      |\n" +
+                      "+-----------------------------------------------+" + RESET);
+}
 
 public function main() returns error? {
-    io:println("Welcome to the Logistics System");
+    printHeader();
 
     while (true) {
-        io:println("\nPlease select an option:");
-        io:println("1. Submit a new delivery request");
-        io:println("2. Track a shipment");
-        io:println("3. Exit");
+        printMenu();
 
-        int option = check int:fromString(io:readln("Enter your choice (1-3): "));
+        int option = check int:fromString(io:readln(CYAN + "👉 Enter your choice (1-3): " + RESET));
         match option {
             1 => {
                 check submitDeliveryRequest();
@@ -22,25 +43,34 @@ public function main() returns error? {
                 check trackShipment();
             }
             3 => {
-                io:println("Thank you for using the Logistics System. Goodbye!");
+                io:println(GREEN + "\n+===============================================+\n" +
+                                   "|            🚚 Thank you for using             |\n" +
+                                   "|        the Logistics System CLI! Goodbye!     |\n" +
+                                   "+===============================================+" + RESET);
                 return;
             }
             _ => {
-                io:println("Invalid option. Please try again.");
+                io:println(RED + "\n+---------------- Invalid Option ---------------+\n" +
+                                   "|  ⚠ Invalid option. Please try again.          |\n" +
+                                   "+-----------------------------------------------+" + RESET);
             }
         }
     }
 }
 
+// Enhanced function to submit delivery requests with more visual feedback
 function submitDeliveryRequest() returns error? {
-    io:println("\nSubmitting a new delivery request");
+    io:println(CYAN + "\n+===============================================+\n" +
+                     "|            📦 Submitting Delivery Request      |\n" +
+                     "+===============================================+" + RESET);
 
-    io:println("\nSelect shipment type:");
-    io:println("1. Standard");
-    io:println("2. Express");
-    io:println("3. International");
+    io:println(YELLOW + "\n+---------------- Shipment Type ----------------+\n" +
+                        "| 1️⃣  → Standard                                 |\n" +
+                        "| 2️⃣  → Express                                  |\n" +
+                        "| 3️⃣  → International                            |\n" +
+                        "+-----------------------------------------------+" + RESET);
 
-    int shipmentChoice = check int:fromString(io:readln("Enter your choice (1-3): "));
+    int shipmentChoice = check int:fromString(io:readln("👉 Enter your choice (1-3): "));
     string shipmentType;
 
     match shipmentChoice {
@@ -48,18 +78,20 @@ function submitDeliveryRequest() returns error? {
         2 => { shipmentType = "express"; }
         3 => { shipmentType = "international"; }
         _ => {
-            io:println("Invalid choice. Defaulting to standard shipment.");
+            io:println(RED + "\n+---------------- Invalid Choice ---------------+\n" +
+                               "|  ⚠ Invalid choice. Defaulting to standard.    |\n" +
+                               "+-----------------------------------------------+" + RESET);
             shipmentType = "standard";
         }
     }
 
-    string pickupLocation = io:readln("Enter pickup location: ");
-    string deliveryLocation = io:readln("Enter delivery location: ");
-    string preferredPickupTime = io:readln("Enter preferred pickup time (YYYY-MM-DD HH:MM): ");
-    string preferredDeliveryTime = io:readln("Enter preferred delivery time (YYYY-MM-DD HH:MM): ");
-    string firstName = io:readln("Enter first name: ");
-    string lastName = io:readln("Enter last name: ");
-    string contactNumber = io:readln("Enter contact number: ");
+    string pickupLocation = io:readln(CYAN + "🏠 Enter pickup location: " + RESET);
+    string deliveryLocation = io:readln(CYAN + "📍 Enter delivery location: " + RESET);
+    string preferredPickupTime = io:readln(CYAN + "⏰ Enter preferred pickup time (YYYY-MM-DD HH:MM): " + RESET);
+    string preferredDeliveryTime = io:readln(CYAN + "⏰ Enter preferred delivery time (YYYY-MM-DD HH:MM): " + RESET);
+    string firstName = io:readln(CYAN + "👤 Enter first name: " + RESET);
+    string lastName = io:readln(CYAN + "👤 Enter last name: " + RESET);
+    string contactNumber = io:readln(CYAN + "📞 Enter contact number: " + RESET);
 
     string requestId = uuid:createType1AsString();
 
@@ -75,24 +107,39 @@ function submitDeliveryRequest() returns error? {
         "contactNumber": contactNumber
     };
 
+    // Simulate processing with loading dots
+    io:print(YELLOW + "\n⏳ Processing");
+ 
+    io:println(RESET);
+
     check sendToKafka(payload);
 
-    io:println("Delivery request submitted successfully!");
-    io:println("Your tracking number is: " + requestId);
-    io:println("You can use this tracking number to check the status of your shipment.");
+    io:println(GREEN + "\n+===============================================+\n" +
+                      "|        ✅ Delivery Request Submitted!          |\n" +
+                      "+===============================================+" + RESET);
+    io:println(CYAN + "📦 Your tracking number is: " + requestId + RESET);
+    io:println("ℹ️ Use this tracking number to check the status of your shipment.");
 }
 
+// Enhanced tracking shipment UI with more clarity
 function trackShipment() returns error? {
-    string trackingNumber = io:readln("Enter tracking number: ");
+    string trackingNumber = io:readln(CYAN + "📦 Enter tracking number: " + RESET);
     
     json trackingRequest = {
         "requestId": trackingNumber
     };
 
+    io:print(YELLOW + "\n⏳ Sending tracking request");
+  
+    io:println(RESET);
+
     check sendToKafka(trackingRequest, "tracking-requests");
 
-    io:println("Tracking information for " + trackingNumber + " has been requested.");
-    io:println("Please check back later for updates on your shipment.");
+    io:println(GREEN + "\n+===============================================+\n" +
+                      "|     🔍 Tracking request sent for:             |\n" +
+                      "|     📦 " + trackingNumber + "                  |\n" +
+                      "+===============================================+" + RESET);
+    io:println("ℹ️ Please check back later for updates on your shipment.");
 }
 
 function sendToKafka(json payload, string topic = "delivery-requests") returns error? {

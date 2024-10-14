@@ -38,7 +38,7 @@ services:
 
   standard-service:
     build:
-      context: services/standard
+      context: services/delivery/standard
       dockerfile: Dockerfile
     platform: linux/arm64/v8
     depends_on:
@@ -48,7 +48,7 @@ services:
 
   express-service:
     build:
-      context: services/express
+      context: services/delivery/express
       dockerfile: Dockerfile
     platform: linux/arm64/v8
     depends_on:
@@ -58,7 +58,7 @@ services:
 
   international-service:
     build:
-      context: services/international
+      context: services/delivery/international
       dockerfile: Dockerfile
     platform: linux/arm64/v8
     depends_on:

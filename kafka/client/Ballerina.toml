@@ -4,5 +4,9 @@ name = "client"
 version = "0.1.0"
 distribution = "2201.10.1"
 
+dependencies = [
+    "shan1024/chalk"
+]
+
 [build-options]
 observabilityIncluded = true
