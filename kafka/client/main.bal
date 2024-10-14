@@ -5,7 +5,7 @@ import ballerina/uuid;
 
 
 public function main() returns error? {
-    io:println("Welcome to the Logistics System");
+    io:println("Welcome To The Logistics System");
 
     while (true) {
         io:println("\nPlease select an option:");
@@ -26,7 +26,7 @@ public function main() returns error? {
                 return;
             }
             _ => {
-                io:println("Invalid option. Please try again.");
+                io:println("Invalid option. Please Try Again.");
             }
         }
     }
@@ -77,13 +77,13 @@ function submitDeliveryRequest() returns error? {
 
     check sendToKafka(payload);
 
-    io:println("Delivery request submitted successfully!");
-    io:println("Your tracking number is: " + requestId);
+    io:println("Delivery Request Submitted Successfully!");
+    io:println("Your Tracking Number is: " + requestId);
     io:println("You can use this tracking number to check the status of your shipment.");
 }
 
 function trackShipment() returns error? {
-    string trackingNumber = io:readln("Enter tracking number: ");
+    string trackingNumber = io:readln("Enter Tracking Number: ");
     
     json trackingRequest = {
         "requestId": trackingNumber
@@ -92,7 +92,7 @@ function trackShipment() returns error? {
     check sendToKafka(trackingRequest, "tracking-requests");
 
     io:println("Tracking information for " + trackingNumber + " has been requested.");
-    io:println("Please check back later for updates on your shipment.");
+    io:println("Please Check Back Later For Updates On Your Shipment.");
 }
 
 function sendToKafka(json payload, string topic = "delivery-requests") returns error? {
